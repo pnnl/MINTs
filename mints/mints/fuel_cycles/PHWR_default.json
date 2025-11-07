@@ -1,0 +1,70 @@
+{"fuel_cycle_name": "Demo_PHWR",
+"fuel_cycle_type": "PHWR",
+"simulation_parameters": {
+        "press_time": 1,
+        "drum_fill_time": 1,
+        "assembly_time": 1,
+        "chem_time": 1,
+        "reactor_load_time": 1
+    },
+"facilities": [
+        {
+            "type": "Mine",
+            "name": "uranium_mine_1",
+            "parameters": { "drum_throughput": 7,
+                            "drum_weight_mean_kg": 400,
+                            "drum_weight_std_kg": 0.1
+                          }
+        },
+        {
+            "type": "Conversion",
+            "name": "conversion_1",
+            "parameters": {
+                "priority": 1,
+                "in_material": "U3O8",
+                "out_material": "UO2",
+                "receiving_drum_throughput": 7,
+                "receiving_max_inventory": 40,
+                "shipping_facility": "uranium_mine_1",
+                "drum_weight_mean_kg": 400,
+                "drum_weight_std_kg": 0.1,
+                "input_container_type": "drum",
+                "conversion_max_drum_throughput": 10,
+                "process_loss": 0,
+                "output_container_type": "drum"
+            }
+        },
+        {
+            "type": "Fuel_Fab",
+            "name": "fuel_fabrication_1",
+            "parameters": {
+                "priority": 1,
+                "pellet_batch_size": 600,
+                "shipping_facility": "conversion_1",
+                "receiving_drum_throughput": 7,
+                "receiving_max_inventory": 40,
+                "throughput_pellets": 124320,
+                "pellet_press_input_material": "UO2",
+                "pellet_weight_mean_kg": 0.02,
+                "pellet_weight_std_kg": 0.0005,
+                "throughput_rods": 4144,
+                "pellets_per_rod":30,
+                "throughput_assemblies": 112,
+                "rods_per_assembly": 37
+            }
+        },
+        {
+            "type": "PHWR_Reactor",
+            "name": "reactor_1",
+            "parameters": {
+                "priority": 1,
+                "reactor_load_time": 1,
+                "shipping_facility": "fuel_fabrication_1",
+                "receiving_assemblies_throughput": 112,
+                "receiving_max_inventory": 300,
+                "reload_batch_size": 112,
+                "core_capacity": 4560
+            }
+        }
+    ]
+} 

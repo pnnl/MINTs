@@ -1,0 +1,113 @@
+{"fuel_cycle_name": "Demo_LWR",
+"fuel_cycle_type": "LWR",
+"simulation_parameters": {
+        "press_time": 1,
+        "drum_fill_time": 1,
+        "assembly_time": 1,
+        "chem_time": 1,
+        "reactor_load_time": 1
+    },
+"facilities": [
+        {
+            "type": "Mine",
+            "name": "uranium_mine_1",
+            "parameters": { "drum_throughput": 14,
+                            "drum_weight_mean_kg": 400,
+                            "drum_weight_std_kg": 0.1
+                          }
+        },
+        {
+            "type": "Conversion",
+            "name": "conversion_1",
+            "parameters": {
+                "priority": 1,
+                "in_material": "U3O8",
+                "out_material": "UF6",
+                "receiving_drum_throughput": 100,
+                "receiving_max_inventory": 40,
+                "shipping_facility": "uranium_mine_1",
+                "drum_weight_mean_kg": 12501,
+                "drum_weight_std_kg": 10,
+                "input_container_type": "drum",
+                "conversion_max_drum_throughput": 10,
+                "process_loss": 0,
+                "output_container_type": "cylinder40y"
+            }
+        },
+        {
+            "type": "Enrichment",
+            "name": "enrichment_1",
+            "parameters": {
+                "priority": 1,
+                "feed_material": "UF6",
+                "product_material": "UF6",
+                "product_enrichment": 0.05,
+                "tail_material": "UF6",
+                "tail_depletion": 0.003,
+                "product_rate": 36822,
+                "receiving_drum_throughput": 7,
+                "receiving_max_inventory": 40,
+                "shipping_facility": "conversion_1",
+                "out_fill_weight_mean_kg": 2277,
+                "out_fill_weight_std_kg": 0.1,
+                "input_container_type": "cylinder40y",
+                "cascade_max_drum_throughput": 10,
+                "process_loss": 0,
+                "output_container_type": "cylinder30b"
+            }
+        },
+        {
+            "type": "Conversion",
+            "name": "conversion_2",
+            "parameters": {
+                "priority": 1,
+                "in_material": "UF6",
+                "in_enrichment": 0.05,
+                "out_material": "UO2",
+                "out_enrichment": 0.05,
+                "receiving_drum_throughput": 100,
+                "receiving_max_inventory": 40,
+                "shipping_facility": "enrichment_1",
+                "drum_weight_mean_kg": 400,
+                "drum_weight_std_kg": 0.1,
+                "input_container_type": "cylinder30b",
+                "conversion_max_drum_throughput": 10,
+                "process_loss": 0,
+                "output_container_type": "drum"
+            }
+        },
+        {
+            "type": "Fuel_Fab",
+            "name": "fuel_fabrication_1",
+            "parameters": {
+                "priority": 1,
+                "pellet_batch_size": 600,
+                "shipping_facility": "conversion_2",
+                "receiving_drum_throughput": 7,
+                "receiving_max_inventory": 40,
+                "throughput_pellets": 124320,
+                "pellet_press_input_material": "UO2",
+                "pellet_press_input_enrichment": 0.05,
+                "pellet_weight_mean_kg": 0.01,
+                "pellet_weight_std_kg": 0.0005,
+                "throughput_rods": 4144,
+                "pellets_per_rod":300,
+                "throughput_assemblies": 112,
+                "rods_per_assembly": 236
+            }
+        },
+        {
+            "type": "LWR_Reactor",
+            "name": "reactor_1",
+            "parameters": {
+                "priority": 1,
+                "reactor_load_time": 72,
+                "shipping_facility": "fuel_fabrication_1",
+                "receiving_assemblies_throughput": 60,
+                "receiving_max_inventory": 200,
+                "reload_batch_size": 50,
+                "core_capacity": 177
+            }
+        }
+    ]
+} 
