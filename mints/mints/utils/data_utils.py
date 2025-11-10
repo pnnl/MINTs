@@ -20,7 +20,7 @@ def inv_counter(mba):
     return inv_count
 
 def inv_bulk(mba):
-    inv_bulk=mba['actual_quantity']
+    inv_bulk=mba['quantity']
 
     return inv_bulk
 

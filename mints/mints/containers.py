@@ -10,8 +10,8 @@ from copy import deepcopy
 INVENTORY_COLUMNS = ['id', 'weight', 'when', 'where', 'what', 'form']
 INVENTORY_TYPES = [int, float, int, str, str, str]
 
-BULK_INV_COLUMNS = ['week', 'actual_quantity']
-BULK_INV_TYPES = [int, float, float]
+BULK_INV_COLUMNS = ['week', 'quantity']
+BULK_INV_TYPES = [int, float]
 
 def record_to_row(item):
     return item.id, dict(zip(INVENTORY_COLUMNS, [item.id, item.weight, item.when, item.where, item.what, item.form]))
