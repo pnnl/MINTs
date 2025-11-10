@@ -2,7 +2,7 @@
 
 The Material Inventory Nuclear Tracking Simulator (MINTs) is a discrete event simulation software modeling the flow of material through a nuclear fuel cycle, modeling material flow down to the individual item level. The simulation currently includes functionality for pressurized heavy water reactor (PHWR) fuel cycles, light water reactor (LWR) fuel cycles, and Prismatic High-Temperature Reactor (HTR) fuel cycles.
 
-The MINTs software can be installed as a python package by navigating to the `mints` directory and running `pip install -e`.
+The MINTs software can be installed as a python package by navigating to the `mints` directory and running `pip install -e.`
 
 The notebook `MINTs_Demo.ipynb` provides a high-level guide to getting started with MINTs, and our full documentation can be found on Read the Docs.
 
