@@ -6,7 +6,12 @@ import matplotlib.pyplot as plt
 from mints.facilities.enrichment import *
 
 def inv_counter(mba):
-    final_week=np.max(mba['week'])
+    try:
+        final_week=np.max(mba['week'])
+    except KeyError:
+        print('Inventory was empty')
+        return np.array([0]),np.array([0])
+    
     inv_count=np.zeros((final_week,1))
 
     for ii in range(final_week):
