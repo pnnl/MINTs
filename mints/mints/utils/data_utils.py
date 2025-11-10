@@ -174,3 +174,33 @@ def conversion_in_out_plot(conv_store):
     plt.title('Conversion In/out')
     plt.legend()
     plt.show()
+
+
+def load_all_inventory(file_path):
+    """
+    Load all inventory data from the HDF5 file into a nested dictionary.
+
+    Parameters:
+    - file_path: str, path to the HDF5 file
+
+    Returns:
+    - Dictionary where the first key is the facility name and the second key is the store name,
+    containing the DataFrame for each store.
+    """
+    inventory_data = {}
+    
+    with pd.HDFStore(file_path, mode='r') as store:
+        for key in store.keys():
+            # Split the key to extract facility and store names
+            path_parts = key.strip('/').split('/')
+            facility_name = path_parts[0]
+            store_name = path_parts[1]
+            
+            # Initialize nested dictionary if not already initialized
+            if facility_name not in inventory_data:
+                inventory_data[facility_name] = {}
+                
+            # Load the DataFrame
+            inventory_data[facility_name][store_name] = store.get(key)
+    
+    return inventory_data
