@@ -4,7 +4,7 @@ The Material Inventory Nuclear Tracking Simulator (MINTs) is a discrete event si
 
 The MINTs software can be installed as a python package by navigating to the `mints` directory and running `pip install -e.`
 
-The notebook `MINTs_Demo.ipynb` provides a high-level guide to getting started with MINTs, and our full documentation can be found on Read the Docs.
+The notebook `MINTs_Demo.ipynb` provides a high-level guide to getting started with MINTs, and our [full documentation can be found on Read the Docs](https://mints.readthedocs.io/en/latest/).
 
 ## Project Abstract
 Safeguards implementation planning requires a deep understanding of the material flow within a fuel cycle. This can be facilitated by nuclear fuel cycle simulation. For forward-planning safeguards implementations for reactors not yet in operations, it is especially key to understand material flow at the item, stratum, facility, and fuel cycle scales to best-implement safeguards. However, with a lack of historical safeguards-relevant information, simulation becomes a critical (and sometimes the only) tool available for planning. The Material Inventory and Nuclear Tracking simulator (MINTs) is a discrete event simulator designed to simulate nuclear material flow across a nuclear fuel cycle at the item, stratum, facility, and whole-cycle scale.
