@@ -3,3 +3,11 @@
 *.h5
 *.pstats
 *.eggs
+
+docs/_build/
+docs/source/*.autosummary/
+docs/.doctrees
+dist/
+build/
+
+*.DS_Store

@@ -1,3 +1,10 @@
+"""
+The MINTs containers module contains implementations of the classes which
+implement the Material Balance Areas in the simulation. These include both
+Monitored Containers, which are representative of bulk item stores, and Monitored
+Filter Stores, which are representative of item stratas in the fuel cycle.
+"""
+
 import simpy
 import heapq
 import itertools
@@ -17,7 +24,12 @@ def record_to_row(item):
     return item.id, dict(zip(INVENTORY_COLUMNS, [item.id, item.weight, item.when, item.where, item.what, item.form]))
 
 class MonitoredContainer(simpy.Container):
-    '''Inherits Container class from simpy. Appends (time,level) 
+    '''
+    The MonitoredContainer class is an implementation of a bulk store MBA for the
+    fuel cycle simulation. The Monitored Container is expected to contain one material
+    type which is added and removed based on weight.
+
+    Inherits Container class from simpy. Appends (time,level) 
     of the container to self.data everytime the level changes (put,get are called))
     '''
     def __init__(self, env, *args, **kwargs):
