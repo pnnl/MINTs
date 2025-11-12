@@ -4,3 +4,4 @@ pandas
 numpy
 recordtype
 matplotlib
+sphinx_autodoc_typehints
