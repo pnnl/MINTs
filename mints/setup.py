@@ -9,7 +9,7 @@ requirements = ['simpy',
                 'pandas',
                 'recordtype',
                 'matplotlib',
-                'pytables'
+                'tables'
 ]
 
 setup(

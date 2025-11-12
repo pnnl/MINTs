@@ -1,0 +1,5 @@
+*.pyc
+*.egg-info
+*.h5
+*.pstats
+*.eggs
