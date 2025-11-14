@@ -6,6 +6,7 @@ from mints.facilities.shipping_receiving import Mine
 from mints.containers import *
 from mints.resources import *
 from simpy.core import Environment
+import matplotlib.pyplot as plt
 
 class Conversion(SimulationFacility):
     '''Conversion facility class
@@ -47,21 +48,24 @@ class Conversion(SimulationFacility):
         self.receiving_mba = MonitoredFilterStore(env)
 
         # Chemistry MBA
+        self.common_isotopes = self.in_material.isotopes.keys() & self.out_material.isotopes.keys()
+
         self.chemistry_mba_drums = MonitoredFilterStore(env) #Store for unopened drums in chem mba
         self.chem_mba_process: dict = {}   #Dictionary of isotopestores for the chemistry process(filled by in_material)
         self.chem_mba_toproduct: dict = {} #Dictionary of isotopestores to be packaged into out_material
         self.chem_mba_lostmaterial: dict = {} #Dictionary of isotopestores for the material lost during conversion
-        for ii in in_material.isotopes:
-            self.chem_mba_process[f'{ii}_in_process'] = MonitoredContainer(env)
-            self.chem_mba_toproduct[f'{ii}_to_product'] = MonitoredContainer(env)
+        for ii in self.common_isotopes:
+            self.chem_mba_process[f'{ii}_in_process'] = MonitoredContainer(env,capacity=50000)
+            self.chem_mba_toproduct[f'{ii}_to_product'] = MonitoredContainer(env,capacity=50000)
             self.chem_mba_lostmaterial[f'{ii}_lost_material'] = MonitoredContainer(env)
         
-        self.common_isotopes = self.in_material.isotopes.keys() & self.out_material.isotopes.keys()
+        
 
         logging.debug(f"FACILTY {self.name} common isotopes: {self.common_isotopes}")
         
         # Shipping MBA
-        self.shipping_mba = MonitoredFilterStore(env)
+        self.shipping_mba = MonitoredFilterStore(env,capacity=self.shipping_max_inventory)
+        #self.shipping_mba = MonitoredFilterStore(env)
         self.priority: int = priority
 
         # Weight parameters around drum packing
@@ -76,6 +80,7 @@ class Conversion(SimulationFacility):
         #Combined dict of dynamic and static stores
         self.store_mba = {'receiving_mba':           self.receiving_mba,
                     'shipping_mba':             self.shipping_mba,
+                    'chem_mba_items':            self.chemistry_mba_drums,
                     **self.chem_mba_lostmaterial,**self.chem_mba_process, **self.chem_mba_toproduct}
 
     def dict_of_stores(self):
@@ -95,19 +100,29 @@ class Conversion(SimulationFacility):
         while True:
             #order drums from the shipper
             num_to_order=min(receiving_drum_throughput,receiving_max_inventory-self.receiving_mba.check_quantity())
-            logging.info(f't={self.env.now}: {self.name} ordered num_to_order ={num_to_order}')
-            drums_received = yield shipper.shipping_mba.submit_order(num_to_order, form=input_container_type, priority=self.priority)
+            logging.info(f't={self.env.now}: {self.name} ordered num_to_order ={num_to_order} {input_container_type}(s)')
+            
+            if(len(self.shipping_mba.items) <self.shipping_max_inventory):
+                drums_received = yield shipper.shipping_mba.submit_order(num_to_order, priority=self.priority)
+            else:
+                drums_received=None
+
+            #drums_received = yield shipper.shipping_mba.submit_order(num_to_order, priority=self.priority)
+
+            #drums_received = yield shipper.shipping_mba.submit_order(num_to_order, form=input_container_type, priority=self.priority)
             if drums_received is not None:
-                logging.debug(f't={self.env.now}: {self.name} drums received ={drums_received}')
-                logging.debug(f't={self.env.now}: {self.name} received {len(drums_received)}')
+                self.place_items(self.receiving_mba, drums_received)
+                logging.info(f't={self.env.now}: {self.name} received {len(drums_received)} {input_container_type}(s)')
+            else:
+                logging.info(f't={self.env.now}: {self.name} received 0 {input_container_type}(s)')
 
             yield self.env.timeout(1) #timeout so goods "appear" in the store at the next time step
 
             #place drums in the recieving mba
-            if drums_received is not None:
-                self.place_items(self.receiving_mba, drums_received)
-                logging.info(f't={self.env.now}: {self.name} received {len(drums_received)}')
-                logging.info(f't={self.env.now}: {self.name} placed {len(drums_received)} in receiving_mba ')
+           # if drums_received is not None:
+                
+            #    logging.info(f't={self.env.now}: {self.name} received {len(drums_received)}')
+            #    logging.info(f't={self.env.now}: {self.name} placed {len(drums_received)} in receiving_mba ')
         
     def conversion_chemistry(self,
                              conversion_max_drum_throughput=6,
@@ -123,25 +138,27 @@ class Conversion(SimulationFacility):
         process_loss {float} : Process loss, (1+process_loss) material is taken from stores for each 1 material converted 
         '''
         while True:
-            #Open enough drums for  drum_throughput barrels (or as many as possible) and move into isotope stores
-            #.962 kg u3o8/ kg uo2
+            #Move items from recieving MBA to the Chemisty MBA where they can be opened
    
             num_to_get=min(self.receiving_mba.check_quantity(), np.ceil(conversion_max_drum_throughput*self.in_out_ratio).astype(int))
-            drums_to_chem_mba = yield self.receiving_mba.submit_order(num_to_get, form=input_container_type, priority=self.priority)
-
+            logging.info(f't={self.env.now}: {self.name} chemistry_mab ordered num_to_order ={num_to_get} {input_container_type}(s)')
+            #drums_to_chem_mba = yield self.receiving_mba.submit_order(num_to_get, form=input_container_type, priority=self.priority)
+            drums_to_chem_mba = yield self.receiving_mba.submit_order(num_to_get, priority=self.priority)
             if drums_to_chem_mba is not None:
-                logging.info(f't={self.env.now}: {self.name} moved {len(drums_to_chem_mba)} drums to conversion_chem')
+                logging.info(f't={self.env.now}: {self.name} moved {len(drums_to_chem_mba)} {input_container_type}(s) to conversion_chem')
                 self.place_items(self.chemistry_mba_drums, drums_to_chem_mba)
+            else:
+                logging.info(f't={self.env.now}: {self.name} moved 0 {input_container_type} to conversion_chem')
 
             #Compute material to move from  intermediate products to drums
             #Estimate of the number of drums of converted product
-            mat_to_convert=conversion_max_drum_throughput*400 #If the material being convert is 100% a single isotope this would be the amount
+            mat_to_convert=conversion_max_drum_throughput*self.drum_weight_mean #If the material being convert is 100% a single isotope this would be the amount
             for ii in self.common_isotopes:
                 #what = np.floor(self.chem_mba_process[f'{ii}_in_process'].level / (400*(1+process_loss_parameters[0])*self.out_material.isotopes[ii])).astype(int)*400
-                kg_per_drum = (400 * self.out_material.isotopes[ii])
+                kg_per_drum = (self.drum_weight_mean * self.out_material.isotopes[ii])
                 current_kg = self.chem_mba_process[f'{ii}_in_process'].level
                 drums_possible = np.floor(current_kg / kg_per_drum)
-                kg_possible = drums_possible * 400
+                kg_possible = drums_possible * self.drum_weight_mean
                 logging.debug(f"{self.name} [t = {self.env.now}]: We currently have {current_kg} of {ii}")
                 logging.debug(f"{self.name} [t = {self.env.now}]: We need {kg_per_drum} kg of {ii} to make one drum of {self.out_material.name}.")
                 logging.debug(f"{self.name} [t = {self.env.now}]: I think this the amount of drums we can make given our current amount of {ii}: {drums_possible}")
@@ -181,24 +198,33 @@ class Conversion(SimulationFacility):
                     for ii in self.common_isotopes:
                         yield self.chem_mba_toproduct[f'{ii}_to_product'].get(dweight*self.out_material.isotopes[ii])
 
-                    next_drum = Drum(self.indexer.next_drum(), dweight, self.env.now, self.name, self.out_material, self.env.now)
+                    next_drum = Item(self.indexer.next_drum(), dweight, self.env.now, self.name, self.out_material,output_container_type, self.env.now)
                     yield self.shipping_mba.put(next_drum)
                     drums_filled+=1
                     logging.debug(f't={self.env.now}: A drum was filled at {self.name} with weight {next_drum.weight}')
                 else:
                     break
-            logging.info(f't={self.env.now}: {self.name} filled {drums_filled}')
+            logging.info(f't={self.env.now}: {self.name} filled {drums_filled} {output_container_type}')
            
             #Open drums and place material in process
             num_to_open=min(self.chemistry_mba_drums.check_quantity(), conversion_max_drum_throughput)
-            logging.info(f"t={self.env.now}: {self.name} number to open = {num_to_open}")
+            logging.info(f"t={self.env.now}: {self.name} number to open = {num_to_open}, {input_container_type}(s)")
 
             
-            drums_to_open = yield self.chemistry_mba_drums.submit_order(num_to_open, form=input_container_type, priority=self.priority)
+            #drums_to_open = yield self.chemistry_mba_drums.submit_order(num_to_open, form=input_container_type, priority=self.priority)
+            drums_to_open = yield self.chemistry_mba_drums.submit_order(num_to_open, priority=self.priority)
+
+            #if(len(self.shipping_mba.items) <self.shipping_max_inventory): #test if shipping is full slow down input process
+            #    drums_to_open = yield self.chemistry_mba_drums.submit_order(num_to_open, priority=self.priority)
+            #else:
+            #    drums_to_open=None
+
             if drums_to_open is not None:
+                logging.info(f't={self.env.now}: {self.name} opened {len(drums_to_open)} {input_container_type}(s)')
                 for next_drum in drums_to_open:
-                    for ii in next_drum.what.isotopes:
+                    for ii in self.common_isotopes:
                         self.chem_mba_process[f'{ii}_in_process'].put(next_drum.weight*next_drum.what.isotopes[ii])
+
 
 
             yield self.env.timeout(1)

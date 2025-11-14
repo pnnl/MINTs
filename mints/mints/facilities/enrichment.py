@@ -41,6 +41,7 @@ class Enrichment(SimulationFacility):
                  tail_material: str | Material = UraniumHexaFlouride,
                  tail_depletion: float = 0.003,
                  out_fill_weight_dist=np.random.normal,
+                 shipping_max_inventory=30,
                  **kwargs):
         super().__init__(name, env, indexer)
 
@@ -72,7 +73,8 @@ class Enrichment(SimulationFacility):
 
 
         # Shipping MBA
-        self.shipping_mba = MonitoredFilterStore(env)
+        self.shipping_max_inventory=shipping_max_inventory
+        self.shipping_mba = MonitoredFilterStore(env,capacity=shipping_max_inventory)
         self.priority=priority
 
         # Cascade Parameters

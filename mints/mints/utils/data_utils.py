@@ -102,6 +102,7 @@ def conversion_gen_plot(conv_store, show_loss=False):
     plt.plot(u235_inv/(400*0.0061),label='u235 in process')
 
     u235_inv = inv_bulk(conv_store['U235_to_product'])
+    plt.plot(u235_inv/(400*0.0061),label='u235 bulk product')
 
     ship_inv = inv_counter(conv_store['shipping_mba'])
     plt.plot(ship_inv,label='Shipping Inventory')

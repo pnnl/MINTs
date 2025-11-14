@@ -12,7 +12,7 @@
             "type": "Mine",
             "name": "uranium_mine_1",
             "parameters": { "drum_throughput": 14,
-                            "drum_weight_mean_kg": 400,
+                            "drum_weight_mean_kg":400,
                             "drum_weight_std_kg": 0.1
                           }
         },
@@ -23,7 +23,7 @@
                 "priority": 1,
                 "in_material": "U3O8",
                 "out_material": "UF6",
-                "receiving_drum_throughput": 100,
+                "receiving_drum_throughput": 10,
                 "receiving_max_inventory": 40,
                 "shipping_facility": "uranium_mine_1",
                 "drum_weight_mean_kg": 12501,
@@ -65,13 +65,13 @@
                 "in_enrichment": 0.05,
                 "out_material": "UO2",
                 "out_enrichment": 0.05,
-                "receiving_drum_throughput": 100,
+                "receiving_drum_throughput": 20,
                 "receiving_max_inventory": 40,
                 "shipping_facility": "enrichment_1",
                 "drum_weight_mean_kg": 400,
                 "drum_weight_std_kg": 0.1,
                 "input_container_type": "cylinder30b",
-                "conversion_max_drum_throughput": 10,
+                "conversion_max_drum_throughput": 100,
                 "process_loss": 0,
                 "output_container_type": "drum"
             }

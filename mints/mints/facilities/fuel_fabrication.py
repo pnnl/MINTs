@@ -60,7 +60,8 @@ class Fuel_Fab(SimulationFacility):
 
             logging.info(f'{self.env.now}: Fuel Fab ordering goods from conversion -- num to order = {num_to_order}')
 
-            drums_received = yield shipper.shipping_mba.submit_order(num_to_order, form='drum', priority=self.priority)
+            #drums_received = yield shipper.shipping_mba.submit_order(num_to_order, form='drum', priority=self.priority)
+            drums_received = yield shipper.shipping_mba.submit_order(num_to_order, priority=self.priority)
 
             #timeout so goods appear in the receiving mba next timestep
             yield self.env.timeout(1)
@@ -96,7 +97,8 @@ class Fuel_Fab(SimulationFacility):
             num_to_open = np.floor(min(throughput_pellets*pellet_weight_mean_kg/400*(1+pellet_powder_loss_parameters[0]), self.receiving_mba.check_quantity())).astype(int)
 
             # NOTE: KMP checkpoint
-            drums_from_receiving = yield self.receiving_mba.submit_order(num_to_open, form='drum', priority=self.priority)
+            #drums_from_receiving = yield self.receiving_mba.submit_order(num_to_open, form='drum', priority=self.priority)
+            drums_from_receiving = yield self.receiving_mba.submit_order(num_to_open, priority=self.priority)
 
             #compute how many pellets to press
             pellets_to_make=np.floor(min(self.pelleting_UO2_powder_store.level/pellet_weight_mean_kg, throughput_pellets))
