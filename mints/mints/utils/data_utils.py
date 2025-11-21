@@ -6,7 +6,12 @@ import matplotlib.pyplot as plt
 from mints.facilities.enrichment import *
 
 def inv_counter(mba):
-    final_week=np.max(mba['week'])
+    try:
+        final_week=np.max(mba['week'])
+    except KeyError:
+        print('Inventory was empty')
+        return np.array([0]),np.array([0])
+    
     inv_count=np.zeros((final_week,1))
 
     for ii in range(final_week):
@@ -15,7 +20,7 @@ def inv_counter(mba):
     return inv_count
 
 def inv_bulk(mba):
-    inv_bulk=mba['actual_quantity']
+    inv_bulk=mba['quantity']
 
     return inv_bulk
 
@@ -97,6 +102,7 @@ def conversion_gen_plot(conv_store, show_loss=False):
     plt.plot(u235_inv/(400*0.0061),label='u235 in process')
 
     u235_inv = inv_bulk(conv_store['U235_to_product'])
+    plt.plot(u235_inv/(400*0.0061),label='u235 bulk product')
 
     ship_inv = inv_counter(conv_store['shipping_mba'])
     plt.plot(ship_inv,label='Shipping Inventory')
