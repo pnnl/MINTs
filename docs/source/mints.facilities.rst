@@ -1,10 +1,11 @@
-mints.facilities package
+Facilities Package
 ========================
+The facilities module contains the implementations of the facilities used in the fuel cycle.
+These include facilities for Mining and Milling, Shipping, Conversion, Enrichment, Fuel Fabrication, Reactors, and Storage.
+The facility modules implement the processes and storage for each facility, and the parameters of each facility are set by the fuel cycle configuration file.
 
-Submodules
-----------
 
-mints.facilities.base module
+Base Facility Module
 ----------------------------
 
 .. automodule:: mints.facilities.base
@@ -12,7 +13,7 @@ mints.facilities.base module
    :show-inheritance:
    :undoc-members:
 
-mints.facilities.conversion module
+Conversion Module
 ----------------------------------
 
 .. automodule:: mints.facilities.conversion
@@ -20,7 +21,7 @@ mints.facilities.conversion module
    :show-inheritance:
    :undoc-members:
 
-mints.facilities.enrichment module
+Enrichment Module
 ----------------------------------
 
 .. automodule:: mints.facilities.enrichment
@@ -28,7 +29,7 @@ mints.facilities.enrichment module
    :show-inheritance:
    :undoc-members:
 
-mints.facilities.fuel\_fabrication module
+Fuel Fabrication Module
 -----------------------------------------
 
 .. automodule:: mints.facilities.fuel_fabrication
@@ -36,7 +37,7 @@ mints.facilities.fuel\_fabrication module
    :show-inheritance:
    :undoc-members:
 
-mints.facilities.reactors module
+Reactors Module
 --------------------------------
 
 .. automodule:: mints.facilities.reactors
@@ -44,7 +45,7 @@ mints.facilities.reactors module
    :show-inheritance:
    :undoc-members:
 
-mints.facilities.shipping\_receiving module
+Shipping and Receiving Module
 -------------------------------------------
 
 .. automodule:: mints.facilities.shipping_receiving
@@ -52,18 +53,10 @@ mints.facilities.shipping\_receiving module
    :show-inheritance:
    :undoc-members:
 
-mints.facilities.utils module
+Utilities Module
 -----------------------------
 
 .. automodule:: mints.facilities.utils
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-Module contents
----------------
-
-.. automodule:: mints.facilities
    :members:
    :show-inheritance:
    :undoc-members:

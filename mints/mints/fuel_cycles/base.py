@@ -17,7 +17,17 @@ from mints.resources import Global_Index
 from mints.facilities import SimulationFacility
 
 class SimulationRun:
-    def __init__(self,log_file=None):
+    """
+    The SimulationRun class is a generic implementation of a fuel cycle implementation.
+    This class implements the functionality for loading the configuration file for the fuel cycle, executing the
+    simulation, and writing simulation results to an output file.
+    """
+    def __init__(self, log_file: str | pa.Path = None):
+        """Initialize the fuel cycle simulation object.
+
+        Args:
+            log_file (str or Path, optional): Path to the desired log file. Defaults to None.
+        """
         self.env = Environment()
         self.global_index = Global_Index()
         self.facilities: list[SimulationFacility] = []
@@ -57,7 +67,20 @@ class SimulationRun:
                     store.put(key, ins_and_outs_df)
                     print(f"Saved {key} to {fpath}")
 
-    def load_config(self, config_path):
+    def load_config(self, config_path: str | pa.Path):
+        """Load the configuration file which defines the fuel cycle.
+
+        The details of each fuel cycle implementation are outlined in a config file which is
+        unique to each fuel cycle. The fuel cycle configuration file must specify each of the
+        facilities in the fuel cycle in addition to any process parameters associated with
+        each of the facilities.
+
+        Args:
+            config_path (str | Path): Path to the config file to use
+
+        Raises:
+            NotImplementedError: If facility mentioned in configuration file is not yet impeplemented in the MINTS package.
+        """
         with open(config_path, 'r') as file:
             config = json.load(file)
 
@@ -87,6 +110,11 @@ class SimulationRun:
         self.simulation_params: dict = config['simulation_parameters']
 
     def run_simulation(self, final_time: int):
+        """Run the fuel cycl simulation.
+
+        Args:
+            final_time (int): Number of timesteps to run the simulation.
+        """
         # Initialize processes
         for name, facility in self.facilities.items():
             config = self.facility_configs[name]
@@ -102,7 +130,21 @@ class SimulationRun:
         print(f'Simulation complete; Running time={end-start}')
 
 class HTRPrismatic(SimulationRun):
-    def __init__(self, config_path: str | pa.Path = None,log_file=None):
+    """Fuel Cycle simulation for High Temperature Prismatic Reactor fuel cycles
+
+        The default parameters of the HTRPrismatic fuel cycle are specified in the HTRPrismatic_default.json
+        file in this same folder. This file can be copied and modified to allow for simulation of additional
+        configurations of the HTR Prismatic Fuel Cycle.
+    """
+    def __init__(self,
+                 config_path: str | pa.Path = None,
+                 log_file: str | pa.Path = None):
+        """Instantiate the HTR Prismatic fuel cycle
+
+        Args:
+            config_path (str | pa.Path, optional): Path to a custom config file, otherwise default settings will be used. Defaults to None.
+            log_file ((str | pa.Path), optional): Path to desired log file. Defaults to None.
+        """
         super().__init__(log_file)
         if config_path is None:
             absolute_module_dir = pa.Path(os.path.abspath(os.path.dirname(__file__)))
@@ -110,7 +152,21 @@ class HTRPrismatic(SimulationRun):
         self.load_config(config_path)
 
 class LWR(SimulationRun):
-    def __init__(self, config_path=None,log_file=None):
+    """Fuel Cycle simulation for Light Water Reactor fuel cycles
+
+        The default parameters of the LWR fuel cycle are specified in the LWR_default.json
+        file in this same folder. This file can be copied and modified to allow for simulation of additional
+        configurations of a Light Water Reactor fuel cycle.
+    """
+    def __init__(self,
+                 config_path: str | pa.Path = None,
+                 log_file: str | pa.Path = None):
+        """Instantiate the LWR  fuel cycle
+
+        Args:
+            config_path (str | pa.Path, optional): Path to a custom config file, otherwise default settings will be used. Defaults to None.
+            log_file ((str | pa.Path), optional): Path to desired log file. Defaults to None.
+        """
         super().__init__(log_file)
         if config_path is None:
             absolute_module_dir = pa.Path(os.path.abspath(os.path.dirname(__file__)))
@@ -118,7 +174,21 @@ class LWR(SimulationRun):
         self.load_config(config_path)
 
 class PHWR(SimulationRun):
-    def __init__(self, config_path=None,log_file=None):
+    """Fuel Cycle simulation for Pressurized Heavy Water Reactor fuel cycles
+
+        The default parameters of the PHWR fuel cycle are specified in the PHWR_default.json
+        file in this same folder. This file can be copied and modified to allow for simulation of additional
+        configurations of the PHWR Fuel cycle.
+    """
+    def __init__(self,
+                 config_path: str | pa.Path = None,
+                 log_file: str | pa.Path = None):
+        """Instantiate the PHWR  fuel cycle
+
+        Args:
+            config_path (str | pa.Path, optional): Path to a custom config file, otherwise default settings will be used. Defaults to None.
+            log_file ((str | pa.Path), optional): Path to desired log file. Defaults to None.
+        """
         super().__init__(log_file)
         if config_path is None:
             absolute_module_dir = pa.Path(os.path.abspath(os.path.dirname(__file__)))

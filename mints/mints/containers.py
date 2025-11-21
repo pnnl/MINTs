@@ -1,9 +1,29 @@
+"""
+The Containers module contains the implementation for Material Balance Areas in the fuel cycle.
+Anywhere that material is stored (including in the core of reactors) is an MBA, and all material flow
+occurs from one MBA to another. When items are moved into or out of an MBA, records are kept of what
+is being transferred and when. Additionally, at each timestep, each MBA stores an inventory record
+in the form of a Pandas DataFrame recording a snapshot of the inventory during the timestep.
+
+There are two types of containers implemented in MINTS: MonitoredContainers, which are representative
+of bulk stores, where the MBA contains a bulk amount of some material, and MonitoredFilterStores, which are
+representative of item stores, where the MBA contains items with unique IDs and weights, and material is moved
+into and out of the MBA in whole-unit quantities.
+
+For each type of facility, material is removed via requesting material via the submit_order method.
+Facilities order material from MBAs during each timestep, and when the order is placed the orders are placed into 
+a queue maintained by the MBA. At the end of each timestep, each container sorts this queue by the priority of the ordering facility, 
+and then serves the placed orders based on priority until either 1) all orders have been fufilled or 2) the container runs out of
+material for the given timestep.
+"""
+
 import simpy
 import heapq
 import itertools
 import pandas as pd
 from simpy.resources.store import StoreGet, StorePut
 from simpy.events import Event, Timeout
+from simpy.core import Environment
 from typing import Generator, Callable, NamedTuple
 from copy import deepcopy
 
@@ -14,13 +34,30 @@ BULK_INV_COLUMNS = ['week', 'quantity']
 BULK_INV_TYPES = [int, float]
 
 def record_to_row(item):
+    """Create a dictionary from an item for entering into an inventory record.
+
+    Args:
+        item (Item): Item to record
+
+    Returns:
+        int, dict: Item id and a dictionary of the columns and values for the inventory record
+    """
     return item.id, dict(zip(INVENTORY_COLUMNS, [item.id, item.weight, item.when, item.where, item.what, item.form]))
 
 class MonitoredContainer(simpy.Container):
-    '''Inherits Container class from simpy. Appends (time,level) 
+    '''
+    The MonitoredContainer class represents a bulk store MBA in the fuel cycle, where material can be added
+    and removed from the MBA in bulk quantities by weight.
+
+    Inherits Container class from simpy. Appends (time,level) 
     of the container to self.data everytime the level changes (put,get are called))
     '''
-    def __init__(self, env, *args, **kwargs):
+    def __init__(self, env: Environment, *args, **kwargs):
+        """Initialize the bulk MBA container
+
+        Args:
+            env (Environment): Simpy simulation environment
+        """
         super().__init__(env, *args, **kwargs)
         self.env: simpy.Environment = env
         self.inventory: pd.DataFrame = pd.DataFrame({name: pd.Series(dtype=type_) for name, type_ in zip(BULK_INV_COLUMNS, BULK_INV_TYPES)}).set_index('week')
@@ -65,7 +102,17 @@ class MonitoredContainer(simpy.Container):
         self.ins = 0
         self.outs = 0
 
-    def generate_ins_and_outs_table(self):
+    def generate_ins_and_outs_table(self) -> pd.DataFrame:
+        """Create the input/output table for the fuel cycle simulation
+
+        The input and output table is a pandas dataframe where each row is a week of the
+        fuel cycle simulation, and in each row there are columns for the amount of material
+        which came into the bulk store during the week and a column for the amount of material
+        which left the bulk store during the week.
+
+        Returns:
+            pd.DataFrame: Table of inputs and outputs for the MBA
+        """
         weeks = range(len(self.weekly_ins))
         return pd.DataFrame({'week':weeks, 'ins':self.weekly_ins, 'outs':self.weekly_outs})
     
@@ -125,10 +172,20 @@ class MonitoredContainer(simpy.Container):
             yield self.env.timeout(0)
 
 class MonitoredFilterStore(simpy.FilterStore):
-    '''Inherits from simpy.FilterStore. Updates inventory/data after each get() and push() opperation
+    '''
+    The MonitoredFilterStore implements an item type MBA in the fuel cycle simulation, where
+    each item in the store has a unique id and properties, and material enters and leaves the 
+    store in whole-item incremements.
+
+    Inherits from simpy.FilterStore. Updates inventory/data after each get() and push() opperation
     if the inventory has changed
     '''
-    def __init__(self, env, *args, **kwargs):
+    def __init__(self, env: Environment, *args, **kwargs):
+        """Initialize the item MBA container
+
+        Args:
+            env (Environment): Simpy simulation environment
+        """
         super().__init__(env, *args, **kwargs)
         self.env: simpy.Environment = env
         self.inventory: dict = dict()
@@ -159,11 +216,24 @@ class MonitoredFilterStore(simpy.FilterStore):
         return ret
         
     
-    def get(self, condition, *args) -> StoreGet:
+    def get(self, condition: callable, *args) -> StoreGet:
+        """Retrieve an item from the store
+
+        Args:
+            condition (callable): lambda function which will filter items based on desired criteria
+
+        Returns:
+            StoreGet: Successful event if item is available
+        """
         ret = super().get(condition, *args)           
         return ret
 
-    def remove_from_inventory(self, items):
+    def remove_from_inventory(self, items: list):
+        """Remove a list of items from the inventory record
+
+        Args:
+            items (list): List of items which are being removed from the MBA
+        """
         ids = [item.id for item in items]
         for id in ids:
             self.outs.append(id)
@@ -179,11 +249,25 @@ class MonitoredFilterStore(simpy.FilterStore):
         self.ins = []
         self.outs = []
 
-    def generate_ins_and_outs_table(self):
+    def generate_ins_and_outs_table(self) -> pd.DataFrame:
+        """Generate the input/output table for this MBA
+
+        Returns:
+            pd.DataFrame: Table of inputs and outputs
+        """
         weeks = range(len(self.weekly_ins))
         return pd.DataFrame({'week':weeks, 'ins':self.weekly_ins, 'outs':self.weekly_outs})
 
-    def generate_inventory_table(self):
+    def generate_inventory_table(self) -> pd.DataFrame:
+        """Generate the full inventory table for this MBA
+
+        The final inventory table is a concatenation of all inventory tables from the weeks
+        of the simulation, with an additional column added indicating the week the record
+        was reorded
+
+        Returns:
+            pd.DataFrame: Output inventory table
+        """
         combined_df = pd.DataFrame()  # Initialize with an empty DataFrame
         for i, weekly_dict in enumerate(self.weekly_inventories):
             if len(weekly_dict) == 0:
@@ -218,7 +302,15 @@ class MonitoredFilterStore(simpy.FilterStore):
         return len(self.items)
         
     def submit_order(self, quantity: int, material: str = None, form: str = None, priority: int = 1) -> Event:
-        """Submit a retrieval order based on material type, form, and priority."""
+        """Submit a retrieval order based on material type, form, and priority.
+
+        Args:
+            quantity (int): Number of items desired
+            material (str, optional): Material type of desired items. Defaults to None.
+            form (str, optional): Physical form of desired items. Defaults to None.
+            priority (int, optional): Priority of ordering facility. Defaults to 1.
+        """
+        
         request = self.env.event()
         count = next(self.counter)
         condition = self._item_filter_lambda(material, form)
@@ -248,7 +340,7 @@ class MonitoredFilterStore(simpy.FilterStore):
         Should run once per timestep, at the end of the timestep.
 
         Yields:
-            Generator[StoreGet, Timeout, None]: _description_
+            Generator[StoreGet, Timeout, None]: success if order can be fufilled, 0 otherwise
         """
         yield self.processing_event
         while self.order_queue:

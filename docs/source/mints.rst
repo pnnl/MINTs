@@ -1,8 +1,5 @@
-mints package
+MINTS
 =============
-
-Subpackages
------------
 
 .. toctree::
    :maxdepth: 4
@@ -10,10 +7,8 @@ Subpackages
    mints.facilities
    mints.fuel_cycles
 
-Submodules
-----------
 
-mints.containers module
+Containers Module
 -----------------------
 
 .. automodule:: mints.containers
@@ -21,7 +16,7 @@ mints.containers module
    :show-inheritance:
    :undoc-members:
 
-mints.resources module
+Resources Module
 ----------------------
 
 .. automodule:: mints.resources
@@ -29,10 +24,4 @@ mints.resources module
    :show-inheritance:
    :undoc-members:
 
-Module contents
----------------
 
-.. automodule:: mints
-   :members:
-   :show-inheritance:
-   :undoc-members:
